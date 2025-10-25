@@ -1,0 +1,19 @@
+# Environment files (sensitive info)
+.env
+
+# Docker Compose local overrides
+docker-compose.override.yml
+
+# Node / npm artifacts (if any node code appears)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS / editor files
+.DS_Store
+*.swp
+*.swo
+.vscode/
+
+# Docker runtime / volumes (optional, usually local only)
+*.log

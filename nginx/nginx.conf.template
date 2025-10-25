@@ -1,0 +1,48 @@
+worker_processes auto;
+
+events {
+  worker_connections 1024;
+}
+
+http {
+  upstream app_upstream {
+    zone upstream_zone 64k;
+
+    server app_blue:3000 max_fails=1 fail_timeout=3s;
+    server app_green:3000 backup;
+
+    keepalive 16;
+  }
+
+  server {
+    listen 80;
+    server_name localhost;
+
+    # Tight timeouts for fast failover
+    proxy_connect_timeout 1s;
+    proxy_send_timeout 2s;
+    proxy_read_timeout 2s;
+
+    proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
+    proxy_next_upstream_tries 2;
+
+    location / {
+      proxy_pass http://app_upstream;
+      proxy_pass_request_headers on;
+      proxy_pass_header X-App-Pool;
+      proxy_pass_header X-Release-Id;
+      proxy_set_header Host $host;
+      proxy_set_header X-Real-IP $remote_addr;
+      proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+      proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /version {
+      proxy_pass http://app_upstream;
+    }
+
+    location /healthz {
+      proxy_pass http://app_upstream;
+    }
+  }
+}

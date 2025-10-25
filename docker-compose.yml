@@ -1,0 +1,46 @@
+#version: '3.8'
+
+services:
+  app_blue:
+    image: ${BLUE_IMAGE}
+    environment:
+      - PORT=${PORT}
+      - RELEASE_ID=${RELEASE_ID_BLUE}
+      - APP_POOL=blue
+    ports:
+      - "8081:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
+      interval: 3s
+      timeout: 1s
+      retries: 3
+      start_period: 2s
+
+  app_green:
+    image: ${GREEN_IMAGE}
+    environment:
+      - PORT=${PORT}
+      - RELEASE_ID=${RELEASE_ID_GREEN}
+      - APP_POOL=green
+    ports:
+      - "8082:3000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
+      interval: 3s
+      timeout: 1s
+      retries: 3
+      start_period: 2s
+
+  nginx:
+    image: nginx:1.25
+    depends_on:
+      - app_blue
+      - app_green
+    ports:
+      - "8080:80"
+    environment:
+      - ACTIVE_POOL=${ACTIVE_POOL}
+    volumes:
+      - ./nginx/nginx.conf.template:/etc/nginx/templates/nginx.conf.template
+      - ./nginx/entrypoint.sh:/entrypoint.sh
+    entrypoint: ["/bin/bash", "/entrypoint.sh"]
