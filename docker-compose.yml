@@ -1,4 +1,4 @@
-#version: '3.8'
+version: '3.8'
 
 services:
   app_blue:
@@ -12,9 +12,10 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
       interval: 3s
-      timeout: 1s
+      timeout: 3s        # increased from 1s
       retries: 3
-      start_period: 2s
+      start_period: 5s   # increased from 2s
+    restart: always
 
   app_green:
     image: ${GREEN_IMAGE}
@@ -27,15 +28,18 @@ services:
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
       interval: 3s
-      timeout: 1s
+      timeout: 3s
       retries: 3
-      start_period: 2s
+      start_period: 5s
+    restart: always
 
   nginx:
     image: nginx:1.25
     depends_on:
-      - app_blue
-      - app_green
+      app_blue:
+        condition: service_healthy
+      app_green:
+        condition: service_healthy
     ports:
       - "8080:80"
     environment:
@@ -44,3 +48,4 @@ services:
       - ./nginx/nginx.conf.template:/etc/nginx/templates/nginx.conf.template
       - ./nginx/entrypoint.sh:/entrypoint.sh
     entrypoint: ["/bin/bash", "/entrypoint.sh"]
+    restart: always

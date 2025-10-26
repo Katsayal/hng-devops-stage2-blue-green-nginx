@@ -1,9 +1,19 @@
 #!/bin/bash
-
 set -e
 
-# Substitute ACTIVE_POOL in template and start Nginx
-envsubst '${ACTIVE_POOL}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/nginx.conf
+# Determine primary and backup based on ACTIVE_POOL
+if [[ "$ACTIVE_POOL" == "blue" ]]; then
+    export PRIMARY="app_blue"
+    export BACKUP="app_green"
+else
+    export PRIMARY="app_green"
+    export BACKUP="app_blue"
+fi
 
-echo "Using active pool: ${ACTIVE_POOL}"
+echo "Active pool: $ACTIVE_POOL -> PRIMARY=$PRIMARY, BACKUP=$BACKUP"
+
+# Substitute PRIMARY/BACKUP into Nginx template
+envsubst '${PRIMARY} ${BACKUP}' < /etc/nginx/templates/nginx.conf.template > /etc/nginx/nginx.conf
+
+# Start Nginx in foreground
 nginx -g 'daemon off;'
