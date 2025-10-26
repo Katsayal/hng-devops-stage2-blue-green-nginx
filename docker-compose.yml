@@ -10,7 +10,7 @@ services:
     ports:
       - "8081:3000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/healthz', res => process.exit(res.statusCode===200?0:1))\""]
       interval: 3s
       timeout: 3s        # increased from 1s
       retries: 3
@@ -26,7 +26,7 @@ services:
     ports:
       - "8082:3000"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/healthz"]
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3000/healthz', res => process.exit(res.statusCode===200?0:1))\""]
       interval: 3s
       timeout: 3s
       retries: 3
